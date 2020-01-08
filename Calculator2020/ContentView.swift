@@ -89,13 +89,13 @@ struct ContentView: View {
                         ForEach(row, id: \.self) { button in
                             
                             Button(action: {
-                                //self.performComputation(on: button)
+                                self.performComputation(with: button)
                                 
                             }, label: {
                                 Text(button.title)
                                 
                             })
-                                .frame(width: self.buttonWidth(button), height: (UIScreen.main.bounds.width - 5 * 12) / 4)
+                            .frame(width: self.buttonWidth(button), height: (UIScreen.main.bounds.width - 5 * 12) / 4)
                             .font(.system(size: 32))
                             .foregroundColor(.white)
                             .background(button.background)
@@ -114,5 +114,47 @@ struct ContentView: View {
         return (UIScreen.main.bounds.width - 5 * 12) / 4
     }
     
+    private func performComputation(with button: ButtonStyle) {
+        
+        switch button {
+            
+        case .AC:
+            self.firstValue.removeAll()
+            self.secondValue.removeAll()
+            self.sign.removeAll()
+            self.result.removeAll()
+            
+        case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
+            if sign.isEmpty {
+                self.firstValue += button.title
+                self.result = self.firstValue
+            } else {
+                self.secondValue += button.title
+                self.result = self.secondValue
+            }
+            
+        case .divide, .multiple, .minus, .plus:
+            self.sign = button.title
+            self.result = self.sign
+            
+        case .equal:
+            
+            if self.sign == "+", !self.secondValue.isEmpty {
+                self.result = String(Int(self.firstValue)! + Int(self.secondValue)!)
+                
+            } else if self.sign == "-", !self.secondValue.isEmpty {
+                self.result = String(Int(self.firstValue)! - Int(self.secondValue)!)
+                
+            } else if self.sign == "*", !self.secondValue.isEmpty {
+                self.result = String(Int(self.firstValue)! * Int(self.secondValue)!)
+                
+            } else if self.sign == "/", !self.secondValue.isEmpty {
+                self.result = String(Int(self.firstValue)! / Int(self.secondValue)!)
+            }
+            
+        default:
+            break
+        }
+    }
 }
 
