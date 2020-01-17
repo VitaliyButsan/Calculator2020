@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-enum ButtonStyle: String {
+enum CalculatorButton: String {
     
     case AC, minusPlus, percent, divide
     case seven, eight, nine, multiple
@@ -19,7 +19,7 @@ enum ButtonStyle: String {
     var title: String {
         switch self {
         case .AC: return "AC"
-        case .minusPlus: return "+-"
+        case .minusPlus: return "+/-"
         case .percent: return "%"
         case .divide: return "/"
         case .seven: return "7"
@@ -52,14 +52,25 @@ enum ButtonStyle: String {
     }
 }
 
+class GlobalEnvironment: ObservableObject {
+    
+    @Published var display: String = ""
+    
+    func receiveInput(calculatorButton: CalculatorButton) {
+        self.display = calculatorButton.title
+    }
+}
+
 struct ContentView: View {
+    
+    @EnvironmentObject var envObj: GlobalEnvironment
     
     @State var firstValue: String = ""
     @State var sign: String = ""
     @State var secondValue: String = ""
-    @State var result: String = ""
+    @State var toPrint: String = ""
     
-    let buttons: [[ButtonStyle]] = [
+    let buttons: [[CalculatorButton]] = [
         [.AC, .minusPlus, .percent, .divide],
         [.seven, .eight, .nine, .multiple],
         [.four, .five, .six, .plus],
@@ -73,48 +84,21 @@ struct ContentView: View {
             
             VStack(spacing: 12) {
                 
-                HStack {
-                    Spacer()
-                    Text(self.result)
-                        .font(.system(size: 64))
-                        .foregroundColor(.white)
-                }
-                .padding()
-                .background(Color.clear)
-        
+                DisplayView()
+                
                 ForEach(buttons, id: \.self) { row in
-                    
                     HStack(spacing: 12) {
-                        
                         ForEach(row, id: \.self) { button in
-                            
-                            Button(action: {
-                                self.performComputation(with: button)
-                                
-                            }, label: {
-                                Text(button.title)
-                                
-                            })
-                            .frame(width: self.buttonWidth(button), height: (UIScreen.main.bounds.width - 5 * 12) / 4)
-                            .font(.system(size: 32))
-                            .foregroundColor(.white)
-                            .background(button.background)
-                            .cornerRadius(self.buttonWidth(button) / 2)
+                            CalculatorButtonView(button: button)
                         }
                     }
                 }
+                
             }.padding(.bottom)
         }
     }
     
-    private func buttonWidth(_ buttonStyle: ButtonStyle) -> CGFloat {
-        if buttonStyle == .zero {
-            return (UIScreen.main.bounds.width - 4 * 12) / 2
-        }
-        return (UIScreen.main.bounds.width - 5 * 12) / 4
-    }
-    
-    private func performComputation(with button: ButtonStyle) {
+    private func performCalculation(with button: CalculatorButton) {
         
         switch button {
             
@@ -122,34 +106,42 @@ struct ContentView: View {
             self.firstValue.removeAll()
             self.secondValue.removeAll()
             self.sign.removeAll()
-            self.result.removeAll()
-            
+            self.toPrint.removeAll()
+
         case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
             if sign.isEmpty {
                 self.firstValue += button.title
-                self.result = self.firstValue
+                self.toPrint = self.firstValue
             } else {
                 self.secondValue += button.title
-                self.result = self.secondValue
+                self.toPrint = self.secondValue
             }
             
         case .divide, .multiple, .minus, .plus:
             self.sign = button.title
-            self.result = self.sign
+            self.toPrint = self.sign
+            
+        case .decimal:
+            if self.sign.isEmpty, !self.firstValue.contains(".") {
+                self.firstValue += button.title
+                self.toPrint = self.firstValue
+            } else if !self.sign.isEmpty, !self.secondValue.contains(".") {
+                self.secondValue += button.title
+                self.toPrint = self.secondValue
+            }
             
         case .equal:
-            
             if self.sign == "+", !self.secondValue.isEmpty {
-                self.result = String(Int(self.firstValue)! + Int(self.secondValue)!)
+                self.toPrint = String(Double(self.firstValue)! + Double(self.secondValue)!)
                 
             } else if self.sign == "-", !self.secondValue.isEmpty {
-                self.result = String(Int(self.firstValue)! - Int(self.secondValue)!)
+                self.toPrint = String(Double(self.firstValue)! - Double(self.secondValue)!)
                 
             } else if self.sign == "*", !self.secondValue.isEmpty {
-                self.result = String(Int(self.firstValue)! * Int(self.secondValue)!)
+                self.toPrint = String(Double(self.firstValue)! * Double(self.secondValue)!)
                 
             } else if self.sign == "/", !self.secondValue.isEmpty {
-                self.result = String(Int(self.firstValue)! / Int(self.secondValue)!)
+                self.toPrint = String(Double(self.firstValue)! / Double(self.secondValue)!)
             }
             
         default:
@@ -158,3 +150,75 @@ struct ContentView: View {
     }
 }
 
+struct DisplayView: View {
+    
+    @State var isVisible = false
+    @EnvironmentObject var envObj: GlobalEnvironment
+    
+    var body: some View {
+        
+        HStack(spacing: 0) {
+            
+            Spacer()
+            Text(self.envObj.display)
+                .font(.system(size: 60))
+                .foregroundColor(.white)
+                .padding(.trailing, 5)
+
+            CursorView()
+        }
+        .frame(width: UIScreen.main.bounds.width, height: 50)
+        .padding([.trailing, .bottom])
+    }
+}
+
+struct CursorView: View {
+    
+    @State var opacityPercent: Double = 0.0
+    
+    var repeatingAnimation: Animation {
+        Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true)
+    }
+    
+    var body: some View {
+        Rectangle()
+            .foregroundColor(.gray)
+            .frame(width: 2)
+            .padding(.trailing)
+            .opacity(opacityPercent)
+            .onAppear() {
+                withAnimation(self.repeatingAnimation) { self.opacityPercent = 0.5 }
+        }
+    }
+}
+
+struct CalculatorButtonView: View {
+    
+    var button: CalculatorButton
+    
+    @EnvironmentObject var envObj: GlobalEnvironment
+    
+    var body: some View {
+        
+        Button(action: {
+
+            self.envObj.receiveInput(calculatorButton: self.button)
+            
+        }, label: {
+            Text(button.title).padding()
+            
+        })
+        .frame(width: self.buttonWidth(button), height: (UIScreen.main.bounds.width - 5 * 12) / 4)
+        .font(.system(size: 32))
+        .foregroundColor(.white)
+        .background(button.background)
+        .cornerRadius(self.buttonWidth(button) / 2)
+    }
+    
+    private func buttonWidth(_ buttonStyle: CalculatorButton) -> CGFloat {
+        if buttonStyle == .zero {
+            return (UIScreen.main.bounds.width - 4 * 12) / 2
+        }
+        return (UIScreen.main.bounds.width - 5 * 12) / 4
+    }
+}
