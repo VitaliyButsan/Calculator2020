@@ -61,6 +61,8 @@ class GlobalEnvironment: ObservableObject {
     @Published var blurRadius: CGFloat = 0.0
     @Published var imageOrder: Int = 1
     @Published var display: String = ""
+    @Published var settingsViewOffset: CGFloat = UIScreen.main.bounds.width / 2
+    @Published var isScaled: Bool = false
     
     func receiveInput(calculatorButton: CalculatorButton) {
         self.performCalculation(with: calculatorButton)
@@ -75,29 +77,7 @@ class GlobalEnvironment: ObservableObject {
             self.secondValue.removeAll()
             self.sign.removeAll()
             self.display.removeAll()
-            
-        //=======================================================================
-          /*
-        case .seven:
-            self.imageOrder -= 1
-            self.display = String(self.imageOrder)
-        case .eight:
-            self.imageOrder += 1
-            self.display = String(self.imageOrder)
-        case .four:
-            self.blurRadius -= 1
-            self.display = String(Double(self.blurRadius))
-        case .five:
-            self.blurRadius += 1
-            self.display = String(Double(self.blurRadius))
-        case .one:
-            self.opacity -= 0.1
-            self.display = String(self.opacity)
-        case .two:
-            self.opacity += 0.1
-            self.display = String(self.opacity)
-        // ======================================================================
-            */
+
         case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
             if sign.isEmpty {
                 self.firstValue += button.title
@@ -156,13 +136,16 @@ struct ContentView: View {
     ]
     
     var body: some View {
-        ZStack(alignment: .bottom) {
+        
+        ZStack {
             
-            Image("4")
-                .resizable()
-                .edgesIgnoringSafeArea(.all)
+            BackgroundImageView()
             
             VStack(spacing: 12) {
+                
+                SettingsButtonView()
+                
+                Spacer()
                 
                 DisplayView()
                 
@@ -173,8 +156,73 @@ struct ContentView: View {
                         }
                     }
                 }
+                
             }.padding(.bottom)
+            .scaleEffect(envObj.isScaled ? 0.7 : 1.0)
+            .blur(radius: envObj.isScaled ? 7.0 : 0.0)
+            .animation(.spring())
+            
+            SettingsView()
         }
+    }
+}
+
+struct SettingsButtonView: View {
+    
+    var offset: CGFloat = UIScreen.main.bounds.width / 2
+    @EnvironmentObject var envObj: GlobalEnvironment
+    
+    var body: some View {
+        
+        HStack {
+            
+            Spacer()
+            
+            Button(action: {
+                self.envObj.settingsViewOffset -= self.offset
+                self.envObj.isScaled.toggle()
+                
+            }, label: {
+                Image("gear_icon")
+                    .renderingMode(.original)
+            })
+            
+        }.padding(.all, 20)
+    }
+}
+
+struct SettingsView: View {
+    
+    @EnvironmentObject var envObj: GlobalEnvironment
+    @State var isDragging = false
+    
+    let frameWidth: CGFloat = UIScreen.main.bounds.width / 2
+    
+    var drag: some Gesture {
+        DragGesture()
+            .onChanged { _ in
+                self.isDragging = true
+                self.envObj.settingsViewOffset = self.frameWidth
+                self.envObj.isScaled = false
+        }
+            .onEnded { _ in
+                self.isDragging = false
+        }
+    }
+    
+    var body: some View {
+        
+        VStack {
+            Rectangle()
+                .frame(width: frameWidth)
+                .cornerRadius(15)
+                .foregroundColor(Color.init(#colorLiteral(red: 0.8549019694, green: 0.5858128261, blue: 0.719293346, alpha: 0.4600022007)))
+        }
+        .edgesIgnoringSafeArea(.all)
+        .offset(x: envObj.settingsViewOffset + (frameWidth / 2), y: 0.0)
+        .gesture(drag)
+        .padding()
+        .animation(.spring())
     }
 }
 
@@ -246,5 +294,15 @@ struct CalculatorButtonView: View {
             return (UIScreen.main.bounds.width - 4 * 12) / 2
         }
         return (UIScreen.main.bounds.width - 5 * 12) / 4
+    }
+}
+
+struct BackgroundImageView: View {
+    
+    var body: some View {
+        
+        Image("background_image_4")
+            .resizable()
+            .edgesIgnoringSafeArea(.all)
     }
 }
