@@ -53,22 +53,99 @@ enum CalculatorButton: String {
 }
 
 class GlobalEnvironment: ObservableObject {
-    
+
+    var firstValue: String = ""
+    var sign: String = ""
+    var secondValue: String = ""
+    @Published var opacity: Double = 1.0
+    @Published var blurRadius: CGFloat = 0.0
+    @Published var imageOrder: Int = 1
     @Published var display: String = ""
     
     func receiveInput(calculatorButton: CalculatorButton) {
-        self.display = calculatorButton.title
+        self.performCalculation(with: calculatorButton)
+    }
+    
+    private func performCalculation(with button: CalculatorButton) {
+        
+        switch button {
+            
+        case .AC:
+            self.firstValue.removeAll()
+            self.secondValue.removeAll()
+            self.sign.removeAll()
+            self.display.removeAll()
+            
+        //=======================================================================
+          /*
+        case .seven:
+            self.imageOrder -= 1
+            self.display = String(self.imageOrder)
+        case .eight:
+            self.imageOrder += 1
+            self.display = String(self.imageOrder)
+        case .four:
+            self.blurRadius -= 1
+            self.display = String(Double(self.blurRadius))
+        case .five:
+            self.blurRadius += 1
+            self.display = String(Double(self.blurRadius))
+        case .one:
+            self.opacity -= 0.1
+            self.display = String(self.opacity)
+        case .two:
+            self.opacity += 0.1
+            self.display = String(self.opacity)
+        // ======================================================================
+            */
+        case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
+            if sign.isEmpty {
+                self.firstValue += button.title
+                self.display = self.firstValue
+            } else {
+                self.secondValue += button.title
+                self.display = self.secondValue
+            }
+            
+        case .divide, .multiple, .minus, .plus:
+            self.sign = button.title
+            self.display = self.sign
+            
+        case .decimal:
+            if self.sign.isEmpty, !self.firstValue.contains(".") {
+                self.firstValue += button.title
+                self.display = self.firstValue
+            } else if !self.sign.isEmpty, !self.secondValue.contains(".") {
+                self.secondValue += button.title
+                self.display = self.secondValue
+            }
+            
+        case .equal:
+            if !self.firstValue.isEmpty, !self.secondValue.isEmpty {
+                
+                switch sign {
+                case "+":
+                    self.display = String(Double(self.firstValue)! + Double(self.secondValue)!)
+                case "-":
+                    self.display = String(Double(self.firstValue)! - Double(self.secondValue)!)
+                case "/":
+                    self.display = String(Double(self.firstValue)! / Double(self.secondValue)!)
+                case "*":
+                    self.display = String(Double(self.firstValue)! * Double(self.secondValue)!)
+                default:
+                    break
+                }
+            }
+
+        default:
+            break
+        }
     }
 }
 
 struct ContentView: View {
-    
+
     @EnvironmentObject var envObj: GlobalEnvironment
-    
-    @State var firstValue: String = ""
-    @State var sign: String = ""
-    @State var secondValue: String = ""
-    @State var toPrint: String = ""
     
     let buttons: [[CalculatorButton]] = [
         [.AC, .minusPlus, .percent, .divide],
@@ -80,7 +157,10 @@ struct ContentView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color.black.edgesIgnoringSafeArea(.all)
+            
+            Image("4")
+                .resizable()
+                .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 12) {
                 
@@ -93,66 +173,13 @@ struct ContentView: View {
                         }
                     }
                 }
-                
             }.padding(.bottom)
-        }
-    }
-    
-    private func performCalculation(with button: CalculatorButton) {
-        
-        switch button {
-            
-        case .AC:
-            self.firstValue.removeAll()
-            self.secondValue.removeAll()
-            self.sign.removeAll()
-            self.toPrint.removeAll()
-
-        case .zero, .one, .two, .three, .four, .five, .six, .seven, .eight, .nine:
-            if sign.isEmpty {
-                self.firstValue += button.title
-                self.toPrint = self.firstValue
-            } else {
-                self.secondValue += button.title
-                self.toPrint = self.secondValue
-            }
-            
-        case .divide, .multiple, .minus, .plus:
-            self.sign = button.title
-            self.toPrint = self.sign
-            
-        case .decimal:
-            if self.sign.isEmpty, !self.firstValue.contains(".") {
-                self.firstValue += button.title
-                self.toPrint = self.firstValue
-            } else if !self.sign.isEmpty, !self.secondValue.contains(".") {
-                self.secondValue += button.title
-                self.toPrint = self.secondValue
-            }
-            
-        case .equal:
-            if self.sign == "+", !self.secondValue.isEmpty {
-                self.toPrint = String(Double(self.firstValue)! + Double(self.secondValue)!)
-                
-            } else if self.sign == "-", !self.secondValue.isEmpty {
-                self.toPrint = String(Double(self.firstValue)! - Double(self.secondValue)!)
-                
-            } else if self.sign == "*", !self.secondValue.isEmpty {
-                self.toPrint = String(Double(self.firstValue)! * Double(self.secondValue)!)
-                
-            } else if self.sign == "/", !self.secondValue.isEmpty {
-                self.toPrint = String(Double(self.firstValue)! / Double(self.secondValue)!)
-            }
-            
-        default:
-            break
         }
     }
 }
 
 struct DisplayView: View {
     
-    @State var isVisible = false
     @EnvironmentObject var envObj: GlobalEnvironment
     
     var body: some View {
@@ -161,14 +188,14 @@ struct DisplayView: View {
             
             Spacer()
             Text(self.envObj.display)
-                .font(.system(size: 60))
+                .font(.system(size: 58))
                 .foregroundColor(.white)
                 .padding(.trailing, 5)
 
             CursorView()
         }
-        .frame(width: UIScreen.main.bounds.width, height: 50)
-        .padding([.trailing, .bottom])
+        .frame(width: UIScreen.main.bounds.width - 32, height: 70)
+        .background(Color.init(#colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 0.1912136884))).cornerRadius(16)
     }
 }
 
@@ -182,8 +209,8 @@ struct CursorView: View {
     
     var body: some View {
         Rectangle()
-            .foregroundColor(.gray)
-            .frame(width: 2)
+            .foregroundColor(.white)
+            .frame(width: 2, height: 45)
             .padding(.trailing)
             .opacity(opacityPercent)
             .onAppear() {
@@ -201,7 +228,6 @@ struct CalculatorButtonView: View {
     var body: some View {
         
         Button(action: {
-
             self.envObj.receiveInput(calculatorButton: self.button)
             
         }, label: {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		58680C2D23D3254B008938EE /* gear_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 58680C2C23D3254B008938EE /* gear_icon.png */; };
 		58AE928E23C5F52D00D14242 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AE928D23C5F52D00D14242 /* AppDelegate.swift */; };
 		58AE929023C5F52D00D14242 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AE928F23C5F52D00D14242 /* SceneDelegate.swift */; };
 		58AE929223C5F52D00D14242 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AE929123C5F52D00D14242 /* ContentView.swift */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		58680C2C23D3254B008938EE /* gear_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gear_icon.png; sourceTree = "<group>"; };
 		58AE928A23C5F52D00D14242 /* Calculator2020.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Calculator2020.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		58AE928D23C5F52D00D14242 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		58AE928F23C5F52D00D14242 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -37,6 +39,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		58680C2B23D3253D008938EE /* icons */ = {
+			isa = PBXGroup;
+			children = (
+				58680C2C23D3254B008938EE /* gear_icon.png */,
+			);
+			path = icons;
+			sourceTree = "<group>";
+		};
 		58AE928123C5F52C00D14242 = {
 			isa = PBXGroup;
 			children = (
@@ -56,6 +66,7 @@
 		58AE928C23C5F52D00D14242 /* Calculator2020 */ = {
 			isa = PBXGroup;
 			children = (
+				58680C2B23D3253D008938EE /* icons */,
 				58AE928D23C5F52D00D14242 /* AppDelegate.swift */,
 				58AE928F23C5F52D00D14242 /* SceneDelegate.swift */,
 				58AE929123C5F52D00D14242 /* ContentView.swift */,
@@ -135,6 +146,7 @@
 			files = (
 				58AE929A23C5F52E00D14242 /* LaunchScreen.storyboard in Resources */,
 				58AE929723C5F52E00D14242 /* Preview Assets.xcassets in Resources */,
+				58680C2D23D3254B008938EE /* gear_icon.png in Resources */,
 				58AE929423C5F52E00D14242 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
