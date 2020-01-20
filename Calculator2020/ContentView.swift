@@ -54,15 +54,16 @@ enum CalculatorButton: String {
 
 class GlobalEnvironment: ObservableObject {
 
-    var firstValue: String = ""
-    var sign: String = ""
-    var secondValue: String = ""
-    @Published var opacity: Double = 1.0
-    @Published var blurRadius: CGFloat = 0.0
-    @Published var imageOrder: Int = 1
+    private var firstValue: String = ""
+    private var sign: String = ""
+    private var secondValue: String = ""
+    //@Published var opacity: Double = 1.0
+    //@Published var blurRadius: CGFloat = 0.0
+    //@Published var imageOrder: Int = 1
     @Published var display: String = ""
     @Published var settingsViewOffset: CGFloat = UIScreen.main.bounds.width / 2
     @Published var isScaled: Bool = false
+    @Published var bgImageName: String = "background_image_3"
     
     func receiveInput(calculatorButton: CalculatorButton) {
         self.performCalculation(with: calculatorButton)
@@ -127,7 +128,7 @@ struct ContentView: View {
 
     @EnvironmentObject var envObj: GlobalEnvironment
     
-    let buttons: [[CalculatorButton]] = [
+    private let buttons: [[CalculatorButton]] = [
         [.AC, .minusPlus, .percent, .divide],
         [.seven, .eight, .nine, .multiple],
         [.four, .five, .six, .plus],
@@ -139,7 +140,7 @@ struct ContentView: View {
         
         ZStack {
             
-            BackgroundImageView()
+            BackgroundImageView(name: self.envObj.bgImageName)
             
             VStack(spacing: 12) {
                 
@@ -169,7 +170,7 @@ struct ContentView: View {
 
 struct SettingsButtonView: View {
     
-    var offset: CGFloat = UIScreen.main.bounds.width / 2
+    private var offset: CGFloat = UIScreen.main.bounds.width / 2
     @EnvironmentObject var envObj: GlobalEnvironment
     
     var body: some View {
@@ -196,9 +197,16 @@ struct SettingsView: View {
     @EnvironmentObject var envObj: GlobalEnvironment
     @State var isDragging = false
     
-    let frameWidth: CGFloat = UIScreen.main.bounds.width / 2
+    private let frameWidth: CGFloat = UIScreen.main.bounds.width / 2
     
-    var drag: some Gesture {
+    private let bgImages: [String] = [
+        "background_image_2",
+        "background_image_3",
+        "background_image_3",
+        "background_image_4"
+    ]
+    
+    private var drag: some Gesture {
         DragGesture()
             .onChanged { _ in
                 self.isDragging = true
@@ -211,16 +219,30 @@ struct SettingsView: View {
     }
     
     var body: some View {
-        
-        VStack {
+    
+        ZStack {
+            
             Rectangle()
-                .frame(width: frameWidth)
+                .frame(width: self.frameWidth)
                 .cornerRadius(15)
                 .foregroundColor(Color.init(#colorLiteral(red: 0.8549019694, green: 0.5858128261, blue: 0.719293346, alpha: 0.4600022007)))
+            
+            VStack(spacing: 20) {
+                ForEach(0..<self.bgImages.count) { number in
+                    Image(self.bgImages[number])
+                        .resizable()
+                        .frame(width: self.frameWidth / 2, height: self.frameWidth / 2)
+                        .onTapGesture {
+                            self.envObj.bgImageName = self.bgImages[number]
+                        }
+                }
+                
+            }.padding()
+
         }
         .edgesIgnoringSafeArea(.all)
-        .offset(x: envObj.settingsViewOffset + (frameWidth / 2), y: 0.0)
-        .gesture(drag)
+        .offset(x: self.envObj.settingsViewOffset + (self.frameWidth / 2), y: 0.0)
+        .gesture(self.drag)
         .padding()
         .animation(.spring())
     }
@@ -236,14 +258,16 @@ struct DisplayView: View {
             
             Spacer()
             Text(self.envObj.display)
-                .font(.system(size: 58))
+                .font(.system(size: 56))
                 .foregroundColor(.white)
                 .padding(.trailing, 5)
 
-            CursorView()
+            // CursorView()
         }
         .frame(width: UIScreen.main.bounds.width - 32, height: 70)
+        .padding(.trailing)
         .background(Color.init(#colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 0.1912136884))).cornerRadius(16)
+        .animation(nil)
     }
 }
 
@@ -258,7 +282,7 @@ struct CursorView: View {
     var body: some View {
         Rectangle()
             .foregroundColor(.white)
-            .frame(width: 2, height: 45)
+            .frame(width: 2, height: 40)
             .padding(.trailing)
             .opacity(opacityPercent)
             .onAppear() {
@@ -287,6 +311,7 @@ struct CalculatorButtonView: View {
         .foregroundColor(.white)
         .background(button.background)
         .cornerRadius(self.buttonWidth(button) / 2)
+        .animation(nil)
     }
     
     private func buttonWidth(_ buttonStyle: CalculatorButton) -> CGFloat {
@@ -299,9 +324,10 @@ struct CalculatorButtonView: View {
 
 struct BackgroundImageView: View {
     
+    let name: String
     var body: some View {
         
-        Image("background_image_4")
+        Image(name)
             .resizable()
             .edgesIgnoringSafeArea(.all)
     }
