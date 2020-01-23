@@ -196,16 +196,17 @@ struct SettingsView: View {
     
     @EnvironmentObject var envObj: GlobalEnvironment
     @State var isDragging = false
-    
-    private let frameWidth: CGFloat = UIScreen.main.bounds.width / 2
+    @State private var activeIndex: Int = 0
     
     private let bgImages: [String] = [
+        "background_image_1",
         "background_image_2",
-        "background_image_3",
         "background_image_3",
         "background_image_4"
     ]
-    
+       
+    private let frameWidth: CGFloat = UIScreen.main.bounds.width / 2
+   
     private var drag: some Gesture {
         DragGesture()
             .onChanged { _ in
@@ -219,7 +220,7 @@ struct SettingsView: View {
     }
     
     var body: some View {
-    
+
         ZStack {
             
             Rectangle()
@@ -228,17 +229,22 @@ struct SettingsView: View {
                 .foregroundColor(Color.init(#colorLiteral(red: 0.8549019694, green: 0.5858128261, blue: 0.719293346, alpha: 0.4600022007)))
             
             VStack(spacing: 20) {
-                ForEach(0..<self.bgImages.count) { number in
-                    Image(self.bgImages[number])
-                        .resizable()
-                        .frame(width: self.frameWidth / 2, height: self.frameWidth / 2)
-                        .onTapGesture {
-                            self.envObj.bgImageName = self.bgImages[number]
-                        }
-                }
                 
+                Text("Settings")
+                    .padding(.bottom)
+                    .font(.system(size: 20))
+    
+                ForEach(0..<self.bgImages.count) { index in
+                    SettingsSampleImageView(activeImage: self.$activeIndex, name: self.bgImages[index], width: self.frameWidth / 2, index: index)
+                }
             }.padding()
-
+            
+            /*
+            GeometryReader { geo in
+                Image("empty-frame")
+                    .resizable()
+                    .frame(width: 100, height: 100)
+            } */
         }
         .edgesIgnoringSafeArea(.all)
         .offset(x: self.envObj.settingsViewOffset + (self.frameWidth / 2), y: 0.0)
@@ -246,6 +252,48 @@ struct SettingsView: View {
         .padding()
         .animation(.spring())
     }
+}
+
+struct SettingsSampleImageView: View {
+    
+    @EnvironmentObject var envObj: GlobalEnvironment
+    @Binding var activeImage: Int
+    
+    let name: String
+    let width: CGFloat
+    let index: Int
+    
+    var body: some View {
+
+        Image(self.name)
+            .resizable()
+            .frame(width: self.width, height: self.width)
+            .onTapGesture {
+                self.activeImage = self.index
+                self.envObj.bgImageName = self.name
+            }
+            .background(SettingsImageBorderView(show: self.activeImage == self.index, frameWidth: self.width))
+    }
+}
+
+struct SettingsImageBorderView: View {
+
+    let show: Bool
+    let frameWidth: CGFloat
+    
+    var body: some View {
+        
+        Image("empty-frame")
+            .resizable()
+            .frame(width: self.frameWidth + 20, height: self.frameWidth + 20)
+            .opacity(self.show ? 1.0 : 0.0)
+    }
+    /************************************************************
+    private func convertGeo(geo: GeometryProxy) -> some View {
+        print("frame: ", geo.frame(in: .named("Child")))
+        return Rectangle().frame(width: 0, height: 0)
+    }
+    *////////////////////////////////////////////////////////////
 }
 
 struct DisplayView: View {
@@ -262,32 +310,11 @@ struct DisplayView: View {
                 .foregroundColor(.white)
                 .padding(.trailing, 5)
 
-            // CursorView()
         }
         .frame(width: UIScreen.main.bounds.width - 32, height: 70)
         .padding(.trailing)
         .background(Color.init(#colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 0.1912136884))).cornerRadius(16)
         .animation(nil)
-    }
-}
-
-struct CursorView: View {
-    
-    @State var opacityPercent: Double = 0.0
-    
-    var repeatingAnimation: Animation {
-        Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true)
-    }
-    
-    var body: some View {
-        Rectangle()
-            .foregroundColor(.white)
-            .frame(width: 2, height: 40)
-            .padding(.trailing)
-            .opacity(opacityPercent)
-            .onAppear() {
-                withAnimation(self.repeatingAnimation) { self.opacityPercent = 0.5 }
-        }
     }
 }
 
@@ -325,6 +352,7 @@ struct CalculatorButtonView: View {
 struct BackgroundImageView: View {
     
     let name: String
+    
     var body: some View {
         
         Image(name)
